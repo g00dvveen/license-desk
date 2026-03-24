@@ -158,7 +158,7 @@ license-desk/
 │       ├── auth/                # Контекст авторизации
 │       ├── components/          # Layout, NotificationBell
 │       ├── pages/               # Страницы приложения
-│       └── styles/              # Глобальные стили (SAP Fiori)
+│       └── styles/              # Глобальные стили
 ├── docker/                      # Скрипты инициализации
 ├── docs/                        # Документация и ADR
 ├── docker-compose.yml
@@ -184,10 +184,12 @@ license-desk/
 ## Makefile команды
 
 ```bash
-make dev              # Запуск в Docker с пересборкой
+make demo             # Демо с тестовыми данными
+make demo-keycloak    # Демо с Keycloak SSO
 make up               # Запуск в фоне
-make down             # Остановка
+make down             # Остановка всех сервисов
 make logs             # Логи всех сервисов
+make dev              # Запуск в Docker с пересборкой
 make setup            # Миграции + создание админа
 make dev-backend      # Локальный запуск бэкенда
 make dev-frontend     # Локальный запуск фронтенда
@@ -197,6 +199,27 @@ make format           # Автоформатирование
 make migrate          # Применить миграции
 make migrate-create msg="описание"  # Создать миграцию
 ```
+
+### Windows (без make)
+
+`make` недоступен на Windows по умолчанию. Используйте команды напрямую:
+
+```powershell
+# Демо с тестовыми данными
+docker compose up -d --build
+timeout 8
+docker compose run --rm minio-init
+docker compose exec backend alembic -c migrations/alembic.ini upgrade head
+docker compose exec backend python -m scripts.seed_demo_data
+
+# Остановка
+docker compose down
+
+# Остановка с удалением данных
+docker compose down -v
+```
+
+Альтернативно: установите `make` через [Chocolatey](https://chocolatey.org/) (`choco install make`) или используйте [WSL](https://learn.microsoft.com/en-us/windows/wsl/).
 
 ## Роли и права
 
