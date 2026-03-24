@@ -8,7 +8,7 @@ up:
 	docker compose up -d
 
 down:
-	docker compose down
+	docker compose --profile keycloak down
 
 logs:
 	docker compose logs -f
