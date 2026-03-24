@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LicenseDesk — Система учёта нематериальных активов</title>
+  <meta name="description" content="Open-source система учёта лицензий, подписок, сертификатов. FastAPI + React + PostgreSQL.">
+  <link rel="icon" type="image/svg+xml" href="https://raw.githubusercontent.com/g00dvveen/license-desk/main/frontend/public/favicon.svg">
+  <style>
+    :root {
+      --brand: #0a6ed1;
+      --brand-dark: #0854a0;
+      --shell: #354a5f;
+      --bg: #f5f6f7;
+      --text: #32363a;
+      --text-secondary: #6a6d70;
+      --card-bg: #fff;
+      --border: #e4e4e4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, var(--shell) 0%, #2c3e50 50%, #1a252f 100%);
+      color: #fff;
+      text-align: center;
+      padding: 80px 20px 60px;
+    }
+
+    .hero__logo {
+      width: 64px;
+      height: 64px;
+      background: var(--brand);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: rgba(255,255,255,0.8);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+
+    .hero__actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn--primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn--primary:hover {
+      background: var(--brand-dark);
+    }
+
+    .btn--outline {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    .btn--outline:hover {
+      border-color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Section */
+    .section {
+      padding: 64px 0;
+    }
+
+    .section__title {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
+      color: var(--text);
+    }
+
+    /* Features */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .feature {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      transition: 0.2s;
+    }
+
+    .feature:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .feature__icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .feature h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Screenshots */
+    .screenshots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .screenshots img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: 0.2s;
+    }
+
+    .screenshots img:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      transform: scale(1.02);
+    }
+
+    .screenshots .wide {
+      grid-column: 1 / -1;
+    }
+
+    /* Tech stack */
+    .stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .stack__item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Quick start */
+    .quickstart {
+      background: var(--shell);
+      color: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .quickstart h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .quickstart pre {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 14px;
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+
+    .quickstart code {
+      color: #a8d8ea;
+    }
+
+    .quickstart .comment {
+      color: #7a8a9a;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 16px; }
+      .screenshots { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero__logo">L</div>
+    <h1>LicenseDesk</h1>
+    <p>Open-source система учёта нематериальных активов: лицензий, подписок, сертификатов, доменов</p>
+    <div class="hero__actions">
+      <a href="https://github.com/g00dvveen/license-desk" class="btn btn--primary">
+        GitHub
+      </a>
+      <a href="https://github.com/g00dvveen/license-desk#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82" class="btn btn--outline">
+        Быстрый старт
+      </a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title">Возможности</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="feature__icon">📦</div>
+          <h3>Учёт активов</h3>
+          <p>Лицензии, подписки, домены, SSL-сертификаты, облачные сервисы. Привязка к организациям и проектам. Архивирование с возможностью восстановления.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">💰</div>
+          <h3>Платежи и стоимость</h3>
+          <p>История платежей, автоматический расчёт следующей оплаты. Фиксированный и плавающий периоды продления. Прикрепление инвойсов.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">🔔</div>
+          <h3>Уведомления</h3>
+          <p>Настраиваемые напоминания о платежах. Индивидуальные настройки для каждого актива. Возможность отключения.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">🔐</div>
+          <h3>Контроль доступа</h3>
+          <p>Три роли: Администратор, Менеджер, Наблюдатель. Права привязаны к организациям. Фильтрация данных по доступу.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">📊</div>
+          <h3>Экспорт и аудит</h3>
+          <p>Выгрузка в Excel с фильтрами. Полный журнал действий с детализацией изменений.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">🔌</div>
+          <h3>Интеграции</h3>
+          <p>Keycloak SSO, S3-хранилище (MinIO/AWS), SMTP для email-уведомлений. REST API с Swagger-документацией.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="section" style="background: #fff;">
+    <div class="container">
+      <h2 class="section__title">Интерфейс</h2>
+      <div class="screenshots">
+        <img class="wide" src="https://raw.githubusercontent.com/g00dvveen/license-desk/main/docs/screenshots/current_assets.png" alt="Текущие активы">
+        <img src="https://raw.githubusercontent.com/g00dvveen/license-desk/main/docs/screenshots/assets_details.png" alt="Карточка актива">
+        <img src="https://raw.githubusercontent.com/g00dvveen/license-desk/main/docs/screenshots/references.png" alt="Справочники">
+        <img src="https://raw.githubusercontent.com/g00dvveen/license-desk/main/docs/screenshots/audit.png" alt="Аудит">
+        <img src="https://raw.githubusercontent.com/g00dvveen/license-desk/main/docs/screenshots/settings.png" alt="Настройки">
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title">Стек технологий</h2>
+      <div class="stack">
+        <span class="stack__item">Python 3.12</span>
+        <span class="stack__item">FastAPI</span>
+        <span class="stack__item">React 19</span>
+        <span class="stack__item">TypeScript</span>
+        <span class="stack__item">Ant Design 5</span>
+        <span class="stack__item">PostgreSQL 16</span>
+        <span class="stack__item">Redis</span>
+        <span class="stack__item">Celery</span>
+        <span class="stack__item">MinIO / S3</span>
+        <span class="stack__item">Keycloak</span>
+        <span class="stack__item">Docker</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section class="section" style="background: #fff;">
+    <div class="container">
+      <h2 class="section__title">Быстрый старт</h2>
+      <div class="quickstart">
+        <h3>Запуск с демо-данными</h3>
+        <pre><code><span class="comment"># Клонирование</span>
+git clone https://github.com/g00dvveen/license-desk.git
+cd license-desk
+
+<span class="comment"># Запуск (Docker)</span>
+make demo
+
+<span class="comment"># Открыть http://localhost:5173</span>
+<span class="comment"># Логин: admin@demo.example.com / admin</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      <a href="https://github.com/g00dvveen/license-desk">GitHub</a> ·
+      <a href="https://github.com/g00dvveen/license-desk/blob/main/docs/deployment.md">Документация</a> ·
+      <a href="https://github.com/g00dvveen/license-desk/discussions">Обсуждения</a> ·
+      MIT License
+    </p>
+  </footer>
+
+</body>
+</html>
