@@ -51,9 +51,6 @@
 <details>
 <summary>Развернуть</summary>
 
-### Вход
-![Вход](docs/screenshots/login.png)
-
 ### Текущие активы
 ![Текущие активы](docs/screenshots/current_assets.png)
 
@@ -74,8 +71,6 @@
 
 ### Уведомления
 ![Уведомления](docs/screenshots/notifications.png)
-
-![Popover уведомлений](docs/screenshots/popup_notifications.png)
 
 ### Профиль пользователя
 ![Профиль](docs/screenshots/user_profile.png)
