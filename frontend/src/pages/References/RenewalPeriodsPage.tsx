@@ -8,8 +8,10 @@ import {
   updateRenewalPeriod,
   deleteRenewalPeriod,
 } from "@/api/references";
+import { useAuth } from "@/auth/AuthContext";
 
 export default function RenewalPeriodsPage() {
+  const { canEdit } = useAuth();
   const [data, setData] = useState<RenewalPeriodRead[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -80,7 +82,7 @@ export default function RenewalPeriodsPage() {
 
     { title: "Название", dataIndex: "name" },
     { title: "Месяцев", dataIndex: "months", width: 120 },
-    {
+    ...(canEdit ? [{
       title: "Действия",
       width: 120,
       render: (_: unknown, record: RenewalPeriodRead) => (
@@ -91,7 +93,7 @@ export default function RenewalPeriodsPage() {
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -99,9 +101,11 @@ export default function RenewalPeriodsPage() {
       <div className="card">
         <div className="card__header">
           <div className="card__title">Периоды продления</div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Добавить
-          </Button>
+          {canEdit && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Добавить
+            </Button>
+          )}
         </div>
         <div className="card__body card__body--flush">
           <Table

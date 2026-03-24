@@ -62,6 +62,26 @@ async def require_superuser(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+async def _load_permissions(db: AsyncSession, user: User) -> list[UserPermission]:
+    """Load and cache permissions on user object."""
+    if hasattr(user, "_permissions"):
+        return user._permissions  # type: ignore[attr-defined]
+    result = await db.execute(select(UserPermission).where(UserPermission.user_id == user.id))
+    permissions = list(result.scalars().all())
+    user._permissions = permissions  # type: ignore[attr-defined]
+    return permissions
+
+
+def get_allowed_org_ids(user: User) -> list[int] | None:
+    """Return list of org IDs user has access to, or None if access to all."""
+    if user.is_superuser:
+        return None  # all orgs
+    permissions: list[UserPermission] = getattr(user, "_permissions", [])
+    if any(p.organization_id is None for p in permissions):
+        return None  # has global permission
+    return [p.organization_id for p in permissions if p.organization_id is not None]
+
+
 class PermissionChecker:
     """Check that user has required role for given org/project scope."""
 
@@ -76,8 +96,7 @@ class PermissionChecker:
         if user.is_superuser:
             return user
 
-        result = await db.execute(select(UserPermission).where(UserPermission.user_id == user.id))
-        permissions = list(result.scalars().all())
+        permissions = await _load_permissions(db, user)
 
         role_priority = {"manager": 2, "viewer": 1}
         required_level = role_priority.get(self.required_role, 0)
@@ -90,6 +109,4 @@ class PermissionChecker:
                 detail="Insufficient permissions",
             )
 
-        # Attach permissions to user for downstream filtering
-        user._permissions = permissions  # type: ignore[attr-defined]
         return user

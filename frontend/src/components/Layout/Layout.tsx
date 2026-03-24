@@ -25,20 +25,22 @@ interface NavItem {
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, canView, canEdit, isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems: NavItem[] = [
-    { key: "/assets", icon: <AppstoreOutlined />, label: "Текущие активы", group: "main" },
-    { key: "/archived-assets", icon: <InboxOutlined />, label: "Архивные активы", group: "main" },
-    { key: "/references", icon: <BookOutlined />, label: "Справочники", group: "main" },
-    ...(user?.is_superuser || user?.role === "manager"
+    ...(canView ? [
+      { key: "/assets", icon: <AppstoreOutlined />, label: "Текущие активы", group: "main" },
+      { key: "/archived-assets", icon: <InboxOutlined />, label: "Архивные активы", group: "main" },
+      { key: "/references", icon: <BookOutlined />, label: "Справочники", group: "main" },
+    ] : []),
+    ...(canEdit || isAdmin
       ? [
           { key: "/users", icon: <TeamOutlined />, label: "Пользователи", group: "admin" },
           { key: "/audit", icon: <AuditOutlined />, label: "Аудит", group: "admin" },
         ]
       : []),
-    ...(user?.is_superuser
+    ...(isAdmin
       ? [
           { key: "/settings", icon: <SettingOutlined />, label: "Настройки", group: "admin" },
         ]
@@ -83,7 +85,10 @@ export default function Layout() {
     },
   ];
 
-  const groups = user?.is_superuser || user?.role === "manager" ? ["main", "admin"] : ["main"];
+  const groups = [
+    ...(canView ? ["main"] : []),
+    ...(canEdit || isAdmin ? ["admin"] : []),
+  ];
   const groupLabels: Record<string, string> = {
     admin: "Администрирование",
   };

@@ -51,12 +51,16 @@ async def get_assets(
     currency_id: int | None = None,
     sort_by: str | None = None,
     sort_order: str | None = None,
+    allowed_org_ids: list[int] | None = None,
 ) -> list[Asset]:
     query = (
         select(Asset)
         .options(selectinload(Asset.field_values))
         .where(Asset.is_archived == is_archived)
     )
+    # Filter by allowed organizations
+    if allowed_org_ids is not None:
+        query = query.where(Asset.organization_id.in_(allowed_org_ids))
     if search:
         query = query.where(
             Asset.name.ilike(f"%{search}%") | Asset.comment.ilike(f"%{search}%")

@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend test migrate migrate-create lint format up down logs setup demo
+.PHONY: dev dev-backend dev-frontend test migrate migrate-create lint format up down logs setup demo demo-keycloak
 
 # Docker
 dev:
@@ -36,6 +36,26 @@ demo:
 	@echo "  Admin:   admin@demo.example.com / admin"
 	@echo "  Manager: petrov@demo.example.com / demo"
 	@echo "  Viewer:  kozlov@demo.example.com / demo"
+
+# Demo with Keycloak SSO
+demo-keycloak:
+	docker compose -f docker-compose.yml -f docker-compose.keycloak.yml --profile keycloak up -d --build
+	@echo "Waiting for services..."
+	@sleep 8
+	docker compose run --rm minio-init
+	docker compose exec backend alembic -c migrations/alembic.ini upgrade head
+	docker compose exec backend python -m scripts.seed_demo_data
+	@echo "Initializing Keycloak (waiting for it to start)..."
+	docker compose --profile keycloak run --rm keycloak-init
+	@echo ""
+	@echo "=== LicenseDesk Demo (with Keycloak) ==="
+	@echo "Frontend:  http://localhost:5173"
+	@echo "API Docs:  http://localhost:8000/docs"
+	@echo "Keycloak:  http://localhost:8080 (admin/admin)"
+	@echo "MinIO:     http://localhost:9001 (minioadmin/minioadmin)"
+	@echo ""
+	@echo "Login (local):  admin@demo.example.com / admin"
+	@echo "Login (SSO):    same credentials via Keycloak"
 
 # Local development
 dev-backend:

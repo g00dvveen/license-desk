@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Form, Input, Button, Alert, Divider } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useAuth } from "@/auth/AuthContext";
-
-const keycloakEnabled = import.meta.env.VITE_KEYCLOAK_ENABLED === "true";
+import api from "@/api/client";
 
 export default function LoginPage() {
   const { token, login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [keycloakEnabled, setKeycloakEnabled] = useState(false);
+
+  useEffect(() => {
+    api.get("/auth/config")
+      .then(({ data }) => setKeycloakEnabled(data.keycloak_enabled))
+      .catch(() => {});
+  }, []);
 
   if (token) {
     return <Navigate to="/" replace />;

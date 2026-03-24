@@ -9,8 +9,10 @@ import {
   deleteProject,
   getOrganizations,
 } from "@/api/references";
+import { useAuth } from "@/auth/AuthContext";
 
 export default function ProjectsPage() {
+  const { canEdit } = useAuth();
   const [data, setData] = useState<ProjectRead[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -115,7 +117,7 @@ export default function ProjectsPage() {
       dataIndex: "organization_id",
       render: (id: number | null | undefined) => (id ? orgMap.get(id) ?? id : "—"),
     },
-    {
+    ...(canEdit ? [{
       title: "Действия",
       width: 120,
       render: (_: unknown, record: ProjectRead) => (
@@ -126,7 +128,7 @@ export default function ProjectsPage() {
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -134,9 +136,11 @@ export default function ProjectsPage() {
       <div className="card">
         <div className="card__header">
           <div className="card__title">Проекты</div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Добавить
-          </Button>
+          {canEdit && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Добавить
+            </Button>
+          )}
         </div>
         <div className="toolbar">
           <Input

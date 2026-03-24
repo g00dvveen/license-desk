@@ -30,6 +30,7 @@ import {
   updateAssetTypeField,
   deleteAssetTypeField,
 } from "@/api/references";
+import { useAuth } from "@/auth/AuthContext";
 
 const DATA_TYPE_LABELS: Record<FieldDataType, string> = {
   string: "Строка",
@@ -47,6 +48,7 @@ const DATA_TYPE_OPTIONS = Object.entries(DATA_TYPE_LABELS).map(([value, label]) 
 export default function AssetTypeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canEdit } = useAuth();
   const [assetType, setAssetType] = useState<AssetTypeRead | null>(null);
   const [loading, setLoading] = useState(false);
   const [fieldModalOpen, setFieldModalOpen] = useState(false);
@@ -175,7 +177,7 @@ export default function AssetTypeDetailPage() {
       width: 100,
       render: (v: boolean) => (v ? <Tag>Скрыто</Tag> : "Нет"),
     },
-    {
+    ...(canEdit ? [{
       title: "Действия",
       width: 120,
       render: (_: unknown, record: AssetTypeFieldRead) => (
@@ -186,7 +188,7 @@ export default function AssetTypeDetailPage() {
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -201,24 +203,28 @@ export default function AssetTypeDetailPage() {
           />
           <h1 className="page-header__title">{assetType.name}</h1>
         </div>
-        <div className="page-header__actions">
-          <Button type="text" icon={<EditOutlined />} onClick={openTypeEdit}>
-            Редактировать
-          </Button>
-          <Popconfirm title="Удалить тип актива?" onConfirm={handleTypeDelete}>
-            <Button type="text" danger icon={<DeleteOutlined />}>
-              Удалить
+        {canEdit && (
+          <div className="page-header__actions">
+            <Button type="text" icon={<EditOutlined />} onClick={openTypeEdit}>
+              Редактировать
             </Button>
-          </Popconfirm>
-        </div>
+            <Popconfirm title="Удалить тип актива?" onConfirm={handleTypeDelete}>
+              <Button type="text" danger icon={<DeleteOutlined />}>
+                Удалить
+              </Button>
+            </Popconfirm>
+          </div>
+        )}
       </div>
 
       <div className="card">
         <div className="card__header">
           <div className="card__title">Поля типа</div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openFieldCreate}>
-            Добавить поле
-          </Button>
+          {canEdit && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openFieldCreate}>
+              Добавить поле
+            </Button>
+          )}
         </div>
         <div className="card__body card__body--flush">
           <Table

@@ -83,6 +83,18 @@ make demo
 | Менеджер | petrov@demo.example.com | demo |
 | Наблюдатель | kozlov@demo.example.com | demo |
 
+### Демо с Keycloak SSO
+
+```bash
+make demo-keycloak
+```
+
+Дополнительно поднимает Keycloak с настроенным realm `license-desk`, клиентом и демо-пользователями. Вход через SSO доступен на странице логина.
+
+| Сервис | URL |
+|--------|-----|
+| **Keycloak Console** | http://localhost:8080 (admin / admin) |
+
 ### Docker (чистый запуск)
 
 ```bash

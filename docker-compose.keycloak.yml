@@ -1,0 +1,11 @@
+services:
+  backend:
+    environment:
+      - LICENSEDESK_KEYCLOAK_ENABLED=true
+      - LICENSEDESK_KEYCLOAK_BASE_URL=http://keycloak:8080
+      - LICENSEDESK_KEYCLOAK_PUBLIC_URL=http://localhost:8080
+      - LICENSEDESK_KEYCLOAK_REALM=license-desk
+      - LICENSEDESK_KEYCLOAK_CLIENT_ID=license-desk-app
+      - LICENSEDESK_KEYCLOAK_CLIENT_SECRET=license-desk-secret
+      - LICENSEDESK_KEYCLOAK_REDIRECT_URI=http://localhost:8000/api/auth/oidc/callback
+      - LICENSEDESK_KEYCLOAK_FRONTEND_URL=http://localhost:5173

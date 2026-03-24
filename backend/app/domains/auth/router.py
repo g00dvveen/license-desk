@@ -23,6 +23,11 @@ from app.domains.users.schemas import PermissionRead
 router = APIRouter()
 
 
+@router.get("/config")
+async def auth_config():
+    return {"keycloak_enabled": settings.keycloak_enabled}
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     token = await authenticate_user(db, data)
@@ -224,10 +229,12 @@ async def oidc_callback(
 
     try:
         payload = decode_keycloak_token(id_token)
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to decode id_token: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid id_token",
+            detail=f"Invalid id_token: {e}",
         )
 
     keycloak_sub = payload["sub"]

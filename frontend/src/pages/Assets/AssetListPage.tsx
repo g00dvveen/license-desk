@@ -37,6 +37,7 @@ import type {
   AssetTypeRead,
   CurrencyRead,
 } from "@/api/types";
+import { useAuth } from "@/auth/AuthContext";
 import AssetFormModal from "./AssetFormModal";
 
 function getPaymentBadgeClass(dateStr: string): string {
@@ -50,6 +51,7 @@ function getPaymentBadgeClass(dateStr: string): string {
 
 export default function AssetListPage({ archived = false }: { archived?: boolean }) {
   const navigate = useNavigate();
+  const { canEdit } = useAuth();
 
   const [assets, setAssets] = useState<AssetRead[]>([]);
   const [total, setTotal] = useState(0);
@@ -301,7 +303,7 @@ export default function AssetListPage({ archived = false }: { archived?: boolean
           "\u2014"
         ),
     },
-    {
+    ...(canEdit ? [{
       title: "Действия",
       key: "actions",
       width: 120,
@@ -355,7 +357,7 @@ export default function AssetListPage({ archived = false }: { archived?: boolean
           )}
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -375,9 +377,11 @@ export default function AssetListPage({ archived = false }: { archived?: boolean
             >
               Экспорт
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-              Добавить актив
-            </Button>
+            {canEdit && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+                Добавить актив
+              </Button>
+            )}
           </div>
         )}
       </div>

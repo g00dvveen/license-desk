@@ -69,11 +69,13 @@ import type {
   UserRead,
   AssetTypeFieldRead,
 } from "@/api/types";
+import { useAuth } from "@/auth/AuthContext";
 import AssetFormModal from "./AssetFormModal";
 
 export default function AssetDetailPage({ archived = false }: { archived?: boolean }) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canEdit } = useAuth();
   const assetId = Number(id);
 
   const [asset, setAsset] = useState<AssetRead | null>(null);
@@ -408,7 +410,7 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
         <span style={{ color: "var(--text-tertiary)" }}>—</span>
       ),
     }] : []),
-    {
+    ...(canEdit ? [{
       title: "Действия",
       key: "actions",
       width: 100,
@@ -429,7 +431,7 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   // -- Notifications --
@@ -532,15 +534,17 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
       children: (
         <div className="card">
           <div className="card__body--flush">
-            <div className="toolbar">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => { setEditingPayment(null); setNewInvoiceFile(null); paymentForm.resetFields(); setPaymentModalOpen(true); }}
-              >
-                Добавить платёж
-              </Button>
-            </div>
+            {canEdit && (
+              <div className="toolbar">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => { setEditingPayment(null); setNewInvoiceFile(null); paymentForm.resetFields(); setPaymentModalOpen(true); }}
+                >
+                  Добавить платёж
+                </Button>
+              </div>
+            )}
             <Table<PaymentRead>
               rowKey="id"
               columns={paymentColumns}
@@ -560,20 +564,26 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
           <div className="card__body">
             <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ color: "#555" }}>Отправка уведомлений:</span>
-              <Switch
-                checked={asset?.notifications_enabled}
-                onChange={async (checked) => {
-                  try {
-                    await updateAsset(assetId, { notifications_enabled: checked });
-                    setAsset((prev) => prev ? { ...prev, notifications_enabled: checked } : prev);
-                    message.success(checked ? "Уведомления включены" : "Уведомления отключены");
-                  } catch {
-                    message.error("Не удалось изменить настройку");
-                  }
-                }}
-                checkedChildren="Вкл"
-                unCheckedChildren="Выкл"
-              />
+              {canEdit ? (
+                <Switch
+                  checked={asset?.notifications_enabled}
+                  onChange={async (checked) => {
+                    try {
+                      await updateAsset(assetId, { notifications_enabled: checked });
+                      setAsset((prev) => prev ? { ...prev, notifications_enabled: checked } : prev);
+                      message.success(checked ? "Уведомления включены" : "Уведомления отключены");
+                    } catch {
+                      message.error("Не удалось изменить настройку");
+                    }
+                  }}
+                  checkedChildren="Вкл"
+                  unCheckedChildren="Выкл"
+                />
+              ) : (
+                <Tag color={asset?.notifications_enabled ? "green" : "default"}>
+                  {asset?.notifications_enabled ? "Вкл" : "Выкл"}
+                </Tag>
+              )}
             </div>
             <Spin spinning={notifLoading}>
               {notifications.length > 0 && (
@@ -589,53 +599,55 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
                 </div>
               )}
 
-              <Form form={notifForm} layout="vertical">
-                <Form.List name="days">
-                  {(fields, { add, remove }) => (
-                    <>
-                      {fields.map((field) => (
-                        <Space key={field.key} align="baseline" style={{ marginBottom: 8 }}>
-                          <Form.Item
-                            {...field}
-                            label="Дней до платежа"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Укажите количество дней",
-                              },
-                            ]}
-                            style={{ marginBottom: 0 }}
+              {canEdit && (
+                <Form form={notifForm} layout="vertical">
+                  <Form.List name="days">
+                    {(fields, { add, remove }) => (
+                      <>
+                        {fields.map((field) => (
+                          <Space key={field.key} align="baseline" style={{ marginBottom: 8 }}>
+                            <Form.Item
+                              {...field}
+                              label="Дней до платежа"
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Укажите количество дней",
+                                },
+                              ]}
+                              style={{ marginBottom: 0 }}
+                            >
+                              <InputNumber min={1} max={365} style={{ width: 160 }} />
+                            </Form.Item>
+                            <MinusCircleOutlined
+                              onClick={() => remove(field.name)}
+                              style={{ color: "#e74c3c", fontSize: 16 }}
+                            />
+                          </Space>
+                        ))}
+                        <Form.Item>
+                          <Button
+                            type="dashed"
+                            onClick={() => add()}
+                            icon={<PlusOutlined />}
                           >
-                            <InputNumber min={1} max={365} style={{ width: 160 }} />
-                          </Form.Item>
-                          <MinusCircleOutlined
-                            onClick={() => remove(field.name)}
-                            style={{ color: "#e74c3c", fontSize: 16 }}
-                          />
-                        </Space>
-                      ))}
-                      <Form.Item>
-                        <Button
-                          type="dashed"
-                          onClick={() => add()}
-                          icon={<PlusOutlined />}
-                        >
-                          Добавить уведомление
-                        </Button>
-                      </Form.Item>
-                    </>
-                  )}
-                </Form.List>
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    onClick={handleNotifSave}
-                    loading={notifSaving}
-                  >
-                    Сохранить настройки
-                  </Button>
-                </Form.Item>
-              </Form>
+                            Добавить уведомление
+                          </Button>
+                        </Form.Item>
+                      </>
+                    )}
+                  </Form.List>
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      onClick={handleNotifSave}
+                      loading={notifSaving}
+                    >
+                      Сохранить настройки
+                    </Button>
+                  </Form.Item>
+                </Form>
+              )}
             </Spin>
           </div>
         </div>
@@ -661,40 +673,42 @@ export default function AssetDetailPage({ archived = false }: { archived?: boole
             </span>
           </div>
         </div>
-        <div className="page-header__actions">
-          {!archived && (
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => setEditModalOpen(true)}
-            >
-              Редактировать
-            </Button>
-          )}
-          {archived ? (
-            <Popconfirm
-              title="Удалить актив навсегда?"
-              description="Это действие нельзя отменить"
-              onConfirm={handleDelete}
-              okText="Удалить"
-              cancelText="Отмена"
-            >
-              <Button danger icon={<DeleteOutlined />}>
-                Удалить
+        {canEdit && (
+          <div className="page-header__actions">
+            {!archived && (
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => setEditModalOpen(true)}
+              >
+                Редактировать
               </Button>
-            </Popconfirm>
-          ) : (
-            <Popconfirm
-              title="Архивировать актив?"
-              onConfirm={handleArchive}
-              okText="Архивировать"
-              cancelText="Отмена"
-            >
-              <Button danger icon={<InboxOutlined />}>
-                В архив
-              </Button>
-            </Popconfirm>
-          )}
-        </div>
+            )}
+            {archived ? (
+              <Popconfirm
+                title="Удалить актив навсегда?"
+                description="Это действие нельзя отменить"
+                onConfirm={handleDelete}
+                okText="Удалить"
+                cancelText="Отмена"
+              >
+                <Button danger icon={<DeleteOutlined />}>
+                  Удалить
+                </Button>
+              </Popconfirm>
+            ) : (
+              <Popconfirm
+                title="Архивировать актив?"
+                onConfirm={handleArchive}
+                okText="Архивировать"
+                cancelText="Отмена"
+              >
+                <Button danger icon={<InboxOutlined />}>
+                  В архив
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Info Card */}

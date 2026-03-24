@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException, 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db, get_current_user
+from app.dependencies import get_db, get_current_user, PermissionChecker, get_allowed_org_ids
 from app.core.pagination import PaginationParams
 from app.models.user import User
 from app.config import settings
@@ -12,10 +12,17 @@ from app.domains.assets import schemas, service
 
 router = APIRouter()
 
+# Dependency shortcuts
+require_viewer = Depends(PermissionChecker("viewer"))
+require_manager = Depends(PermissionChecker("manager"))
+
 
 @router.get("/storage-info")
 async def storage_info():
     return {"s3_enabled": settings.s3_enabled}
+
+
+# ── Assets CRUD ──
 
 
 @router.get("/", response_model=list[schemas.AssetRead])
@@ -30,7 +37,9 @@ async def list_assets(
     sort_by: str | None = Query(None),
     sort_order: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
 ):
+    allowed_orgs = get_allowed_org_ids(user)
     return await service.get_assets(
         db,
         offset=pagination.offset,
@@ -43,11 +52,16 @@ async def list_assets(
         currency_id=currency_id,
         sort_by=sort_by,
         sort_order=sort_order,
+        allowed_org_ids=allowed_orgs,
     )
 
 
 @router.get("/{asset_id}", response_model=schemas.AssetRead)
-async def get_asset(asset_id: int, db: AsyncSession = Depends(get_db)):
+async def get_asset(
+    asset_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
+):
     return await service.get_asset(db, asset_id)
 
 
@@ -55,7 +69,7 @@ async def get_asset(asset_id: int, db: AsyncSession = Depends(get_db)):
 async def create_asset(
     data: schemas.AssetCreate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.create_asset(db, data, user)
 
@@ -65,7 +79,7 @@ async def update_asset(
     asset_id: int,
     data: schemas.AssetUpdate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.update_asset(db, asset_id, data, user)
 
@@ -74,7 +88,7 @@ async def update_asset(
 async def archive_asset(
     asset_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.archive_asset(db, asset_id, user)
 
@@ -83,7 +97,7 @@ async def archive_asset(
 async def restore_asset(
     asset_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.restore_asset(db, asset_id, user)
 
@@ -92,12 +106,12 @@ async def restore_asset(
 async def delete_asset(
     asset_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     await service.delete_asset(db, asset_id, user)
 
 
-# --- Field Values ---
+# ── Field Values ──
 
 
 @router.put("/{asset_id}/field-values", response_model=list[schemas.AssetFieldValueRead])
@@ -105,23 +119,32 @@ async def update_field_values(
     asset_id: int,
     data: list[schemas.AssetFieldValueWrite],
     db: AsyncSession = Depends(get_db),
+    user: User = require_manager,
 ):
     return await service.update_field_values(db, asset_id, data)
 
 
-# --- Cost History ---
+# ── Cost History ──
 
 
 @router.get("/{asset_id}/cost-history", response_model=list[schemas.CostHistoryRead])
-async def get_cost_history(asset_id: int, db: AsyncSession = Depends(get_db)):
+async def get_cost_history(
+    asset_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
+):
     return await service.get_cost_history(db, asset_id)
 
 
-# --- Payments ---
+# ── Payments ──
 
 
 @router.get("/{asset_id}/payments", response_model=list[schemas.PaymentRead])
-async def get_payments(asset_id: int, db: AsyncSession = Depends(get_db)):
+async def get_payments(
+    asset_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
+):
     return await service.get_payments(db, asset_id)
 
 
@@ -130,7 +153,7 @@ async def create_payment(
     asset_id: int,
     data: schemas.PaymentCreate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.create_payment(db, asset_id, data, user)
 
@@ -140,7 +163,7 @@ async def update_payment(
     payment_id: int,
     data: schemas.PaymentUpdate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     return await service.update_payment(db, payment_id, data, user)
 
@@ -149,9 +172,12 @@ async def update_payment(
 async def delete_payment(
     payment_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     await service.delete_payment(db, payment_id, user)
+
+
+# ── Invoices ──
 
 
 ALLOWED_INVOICE_EXTENSIONS = {
@@ -166,7 +192,7 @@ async def upload_invoice(
     payment_id: int,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
     import os
     import uuid
@@ -205,7 +231,6 @@ async def upload_invoice(
     content_type = file.content_type or "application/octet-stream"
 
     storage = get_storage()
-    # Delete old invoice if exists
     if payment.invoice_url:
         try:
             await storage.delete(payment.invoice_url)
@@ -225,6 +250,7 @@ async def download_invoice(
     payment_id: int,
     inline: bool = Query(False),
     db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
 ):
     import os
     from fastapi.responses import RedirectResponse
@@ -244,7 +270,6 @@ async def download_invoice(
     storage = get_storage()
     from app.core.storage import S3Storage
     if isinstance(storage, S3Storage):
-        # Check that the file exists in S3
         try:
             storage.client.head_object(Bucket=storage.bucket, Key=payment.invoice_url)
         except Exception:
@@ -276,8 +301,9 @@ async def download_invoice(
 async def delete_invoice(
     payment_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = require_manager,
 ):
+    import os
     from app.core.exceptions import NotFoundError
 
     result = await db.execute(select(AssetPayment).where(AssetPayment.id == payment_id))
@@ -295,15 +321,17 @@ async def delete_invoice(
     await db.commit()
 
 
-
-
-# --- Notification Settings ---
+# ── Notification Settings ──
 
 
 @router.get(
     "/{asset_id}/notification-settings", response_model=list[schemas.AssetNotificationSettingRead]
 )
-async def get_notification_settings(asset_id: int, db: AsyncSession = Depends(get_db)):
+async def get_notification_settings(
+    asset_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = require_viewer,
+):
     return await service.get_notification_settings(db, asset_id)
 
 
@@ -314,5 +342,6 @@ async def update_notification_settings(
     asset_id: int,
     data: schemas.AssetNotificationSettingWrite,
     db: AsyncSession = Depends(get_db),
+    user: User = require_manager,
 ):
     return await service.update_notification_settings(db, asset_id, data)

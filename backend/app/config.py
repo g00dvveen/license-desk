@@ -40,7 +40,8 @@ class Settings(BaseSettings):
 
     # Keycloak OIDC (optional)
     keycloak_enabled: bool = False
-    keycloak_base_url: str = ""
+    keycloak_base_url: str = ""  # internal URL for server-to-server (e.g. http://keycloak:8080)
+    keycloak_public_url: str = ""  # external URL for browser redirects (e.g. http://localhost:8080)
     keycloak_realm: str = ""
     keycloak_client_id: str = ""
     keycloak_client_secret: str = ""
@@ -52,8 +53,13 @@ class Settings(BaseSettings):
         return f"{self.keycloak_base_url}/realms/{self.keycloak_realm}"
 
     @property
+    def keycloak_public_issuer_url(self) -> str:
+        base = self.keycloak_public_url or self.keycloak_base_url
+        return f"{base}/realms/{self.keycloak_realm}"
+
+    @property
     def keycloak_auth_url(self) -> str:
-        return f"{self.keycloak_issuer_url}/protocol/openid-connect/auth"
+        return f"{self.keycloak_public_issuer_url}/protocol/openid-connect/auth"
 
     @property
     def keycloak_token_url(self) -> str:

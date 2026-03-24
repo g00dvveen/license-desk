@@ -9,9 +9,11 @@ import {
   updateAssetType,
   deleteAssetType,
 } from "@/api/references";
+import { useAuth } from "@/auth/AuthContext";
 
 export default function AssetTypesPage() {
   const navigate = useNavigate();
+  const { canEdit } = useAuth();
   const [data, setData] = useState<AssetTypeRead[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -83,7 +85,7 @@ export default function AssetTypesPage() {
 
     { title: "Название", dataIndex: "name" },
     { title: "Описание", dataIndex: "description", render: (v: string | null) => v ?? "—" },
-    {
+    ...(canEdit ? [{
       title: "Действия",
       width: 120,
       render: (_: unknown, record: AssetTypeRead) => (
@@ -110,7 +112,7 @@ export default function AssetTypesPage() {
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -118,9 +120,11 @@ export default function AssetTypesPage() {
       <div className="card">
         <div className="card__header">
           <div className="card__title">Типы активов</div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Добавить
-          </Button>
+          {canEdit && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              Добавить
+            </Button>
+          )}
         </div>
         <div className="card__body card__body--flush">
           <Table

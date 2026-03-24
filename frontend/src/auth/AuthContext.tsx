@@ -21,6 +21,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   setToken: (token: string) => void;
+  canView: boolean;
+  canEdit: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -73,8 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const isAdmin = user?.is_superuser ?? false;
+  const canEdit = isAdmin || user?.role === "manager";
+  const canView = canEdit || user?.role === "viewer";
+
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, logout, setToken }}>
+    <AuthContext.Provider value={{ token, user, loading, login, logout, setToken, canView, canEdit, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
