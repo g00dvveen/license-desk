@@ -46,6 +46,45 @@
 | **Хранилище файлов** | MinIO / AWS S3 |
 | **Аутентификация** | JWT, Keycloak (OIDC) |
 
+## Скриншоты
+
+<details>
+<summary>Развернуть</summary>
+
+### Вход
+![Вход](docs/screenshots/login.png)
+
+### Текущие активы
+![Текущие активы](docs/screenshots/current_assets.png)
+
+### Карточка актива
+![Карточка актива](docs/screenshots/assets_details.png)
+
+### Архивные активы
+![Архивные активы](docs/screenshots/archived_assets.png)
+
+### Справочники
+![Справочники](docs/screenshots/references.png)
+
+### Пользователи
+![Пользователи](docs/screenshots/users.png)
+
+### Журнал аудита
+![Аудит](docs/screenshots/audit.png)
+
+### Уведомления
+![Уведомления](docs/screenshots/notifications.png)
+
+![Popover уведомлений](docs/screenshots/popup_notifications.png)
+
+### Профиль пользователя
+![Профиль](docs/screenshots/user_profile.png)
+
+### Настройки
+![Настройки](docs/screenshots/settings.png)
+
+</details>
+
 ## Быстрый старт
 
 ### Демо с тестовыми данными
